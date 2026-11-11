@@ -1,9 +1,13 @@
-import { useState } from "react";
-import { Activity, GitBranch, Star } from "lucide-react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { Activity, Box, GitBranch, Grid3X3, Star } from "lucide-react";
 import { PROFILE } from "../../data/profile";
 import type { GitHubStatsState } from "../../hooks/useGitHubData";
 import { SectionHeading } from "./SectionHeading";
 import { TiltCard } from "./TiltCard";
+
+const LazyContribCity3D = lazy(() =>
+  import("../canvas/ContribCity3D").then((m) => ({ default: m.ContribCity3D }))
+);
 
 function cellColor(count: number) {
   if (count <= 0) return "bg-slate-900/90 border-slate-800/80";
@@ -13,18 +17,29 @@ function cellColor(count: number) {
   return "bg-fuchsia-400 border-white/60 shadow-[0_0_8px_rgba(232,121,249,0.7)]";
 }
 
-export function GitHubActivitySection({ data }: { data: GitHubStatsState }) {
+export function GitHubActivitySection({
+  data,
+  lowPower,
+}: {
+  data: GitHubStatsState;
+  lowPower: boolean;
+}) {
   const [hoveredDay, setHoveredDay] = useState<{
     date: string;
     count: number;
   } | null>(null);
+  const [viewMode, setViewMode] = useState<"3d" | "2d">(lowPower ? "2d" : "3d");
+
+  useEffect(() => {
+    if (lowPower) setViewMode("2d");
+  }, [lowPower]);
 
   return (
     <section id="github" className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
       <SectionHeading
         eyebrow="04 // Telemetry & Contributions"
         title="GitHub Activity"
-        subtitle="Live statistics from GitHub REST API paired with your verified 53-week contribution calendar."
+        subtitle="Live statistics from GitHub REST API paired with an interactive 3D Contribution Metropolis and 53-week heatmap."
       />
 
       <div className="grid gap-6 lg:grid-cols-12">
@@ -41,7 +56,11 @@ export function GitHubActivitySection({ data }: { data: GitHubStatsState }) {
                   : "bg-slate-800 text-slate-300"
               }`}
             >
-              {data.loading ? "Syncing..." : data.isLive ? "Live API" : "Verified Snapshot"}
+              {data.loading
+                ? "Syncing..."
+                : data.isLive
+                  ? "Live API"
+                  : "Verified Snapshot"}
             </span>
           </div>
 
@@ -92,12 +111,14 @@ export function GitHubActivitySection({ data }: { data: GitHubStatsState }) {
           </div>
         </TiltCard>
 
-        {/* 53-week Contribution Heatmap */}
+        {/* Interactive 3D City / 2D Heatmap */}
         <TiltCard className="p-6 lg:col-span-7" glowColor="cyan">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="font-display text-lg font-bold text-white">
-                53-Week Contribution Matrix
+                {viewMode === "3d"
+                  ? "3D Contribution Metropolis"
+                  : "53-Week Contribution Matrix"}
               </h3>
               <p className="font-mono text-xs text-slate-400">
                 {hoveredDay
@@ -106,47 +127,84 @@ export function GitHubActivitySection({ data }: { data: GitHubStatsState }) {
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-400">
-              <span>Less</span>
-              <span className="h-3 w-3 rounded-sm border border-slate-800 bg-slate-900" />
-              <span className="h-3 w-3 rounded-sm bg-cyan-950" />
-              <span className="h-3 w-3 rounded-sm bg-cyan-600/80" />
-              <span className="h-3 w-3 rounded-sm bg-purple-500/85" />
-              <span className="h-3 w-3 rounded-sm bg-fuchsia-400" />
-              <span>More</span>
+            <div className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/80 p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode("3d")}
+                className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 font-mono text-[11px] transition ${
+                  viewMode === "3d"
+                    ? "bg-cyan-500/25 text-cyan-200 ring-1 ring-cyan-400/40"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Box className="h-3.5 w-3.5" />
+                3D City
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("2d")}
+                className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 font-mono text-[11px] transition ${
+                  viewMode === "2d"
+                    ? "bg-cyan-500/25 text-cyan-200 ring-1 ring-cyan-400/40"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Grid3X3 className="h-3.5 w-3.5" />
+                2D Matrix
+              </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto pb-2">
-            <div className="inline-flex gap-1">
-              {data.weeks.slice(-52).map((week, wIdx) => (
-                <div key={wIdx} className="flex flex-col gap-1">
-                  {week.contributionDays.map((day) => (
-                    <button
-                      key={day.date}
-                      type="button"
-                      aria-label={`${day.date}: ${day.contributionCount} contributions`}
-                      onMouseEnter={() =>
-                        setHoveredDay({
-                          date: day.date,
-                          count: day.contributionCount,
-                        })
-                      }
-                      onFocus={() =>
-                        setHoveredDay({
-                          date: day.date,
-                          count: day.contributionCount,
-                        })
-                      }
-                      className={`h-3 w-3 rounded-[3px] border transition-transform hover:scale-125 ${cellColor(
-                        day.contributionCount
-                      )}`}
-                    />
-                  ))}
-                </div>
-              ))}
+          {viewMode === "3d" ? (
+            <div className="relative h-64 w-full overflow-hidden rounded-xl border border-slate-800/80 bg-[#050816]">
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center font-mono text-xs text-slate-400">
+                    Loading 3D Contribution City...
+                  </div>
+                }
+              >
+                <LazyContribCity3D
+                  weeks={data.weeks}
+                  onSelectDay={setHoveredDay}
+                />
+              </Suspense>
+              <span className="pointer-events-none absolute bottom-2 right-3 font-mono text-[10px] text-slate-400">
+                Drag to orbit · Scroll to zoom · Hover bars
+              </span>
             </div>
-          </div>
+          ) : (
+            <div className="overflow-x-auto pb-2">
+              <div className="inline-flex gap-1">
+                {data.weeks.slice(-52).map((week, wIdx) => (
+                  <div key={wIdx} className="flex flex-col gap-1">
+                    {week.contributionDays.map((day) => (
+                      <button
+                        key={day.date}
+                        type="button"
+                        aria-label={`${day.date}: ${day.contributionCount} contributions`}
+                        onMouseEnter={() =>
+                          setHoveredDay({
+                            date: day.date,
+                            count: day.contributionCount,
+                          })
+                        }
+                        onFocus={() =>
+                          setHoveredDay({
+                            date: day.date,
+                            count: day.contributionCount,
+                          })
+                        }
+                        className={`h-3 w-3 rounded-[3px] border transition-transform hover:scale-125 ${cellColor(
+                          day.contributionCount
+                        )}`}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {data.recentRepos.length > 0 && (
             <div className="mt-6 border-t border-slate-800/80 pt-4">

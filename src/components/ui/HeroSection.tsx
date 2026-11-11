@@ -43,8 +43,12 @@ const FOCUS_OPTIONS: { id: CameraFocus; label: string; icon: typeof Monitor }[] 
 function FallbackBackdrop() {
   return (
     <div className="cyber-grid-bg relative h-full w-full overflow-hidden bg-gradient-to-b from-[#070b1e] via-void to-void">
-      <div className="absolute left-1/4 top-1/4 h-72 w-72 rounded-full bg-purple-600/20 blur-[110px]" />
-      <div className="absolute right-1/4 top-1/3 h-72 w-72 rounded-full bg-cyan-500/20 blur-[110px]" />
+      <img
+        src="./workspace-3d.jpg"
+        alt="3D Isometric Developer Workspace"
+        className="h-full w-full object-cover object-center opacity-55"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-void/70 via-void/30 to-void" />
     </div>
   );
 }

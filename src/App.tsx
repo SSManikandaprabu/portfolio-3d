@@ -40,7 +40,7 @@ export function App() {
         <AboutSection publicRepos={githubData.publicRepos} />
         <SkillsSection />
         <ProjectsSection />
-        <GitHubActivitySection data={githubData} />
+        <GitHubActivitySection data={githubData} lowPower={lowPower} />
         <ExperienceSection />
         <EducationSection />
         <AchievementsSection />
