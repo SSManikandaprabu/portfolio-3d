@@ -122,7 +122,6 @@ function CurvedMonitor({
         document.body.style.cursor = "auto";
       }}
     >
-      {/* Curved screen mesh */}
       <mesh rotation={[0, Math.PI - 0.55, 0]}>
         <cylinderGeometry args={[2.1, 2.1, 1.08, 40, 1, true, 0, 1.1]} />
         <meshStandardMaterial
@@ -136,7 +135,6 @@ function CurvedMonitor({
         />
       </mesh>
 
-      {/* Outer metallic curved frame */}
       <mesh position={[0, 0, -0.025]} rotation={[0, Math.PI - 0.57, 0]}>
         <cylinderGeometry args={[2.13, 2.13, 1.14, 40, 1, true, 0, 1.14]} />
         <meshStandardMaterial
@@ -147,7 +145,6 @@ function CurvedMonitor({
         />
       </mesh>
 
-      {/* Monitor neck & base */}
       <mesh position={[0, -0.82, -0.15]} castShadow>
         <boxGeometry args={[0.14, 0.72, 0.12]} />
         <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.2} />
@@ -157,7 +154,6 @@ function CurvedMonitor({
         <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.25} />
       </mesh>
 
-      {/* Ambient glow from screen */}
       <pointLight position={[0, 0, 0.8]} color="#38bdf8" intensity={hovered ? 3.0 : 1.8} distance={4} />
 
       {hovered && (
@@ -214,19 +210,16 @@ function KeyboardAndMouse() {
 
   return (
     <group position={[0, 0.04, 0.65]}>
-      {/* Desk Mat */}
       <mesh position={[0, -0.02, 0]} receiveShadow>
         <boxGeometry args={[2.5, 0.016, 1.05]} />
         <meshStandardMaterial color="#070b1a" roughness={0.85} metalness={0.1} />
       </mesh>
 
-      {/* Keyboard chassis */}
       <mesh position={[-0.18, 0.02, 0.04]} rotation={[0.06, 0, 0]} castShadow>
         <boxGeometry args={[1.55, 0.05, 0.48]} />
         <meshStandardMaterial color="#0f172a" metalness={0.75} roughness={0.3} />
       </mesh>
 
-      {/* RGB Keycaps */}
       <group ref={keysGroupRef} position={[-0.18, 0.055, 0.04]} rotation={[0.06, 0, 0]}>
         {keys.map(([x, z], idx) => (
           <mesh
@@ -251,7 +244,6 @@ function KeyboardAndMouse() {
         ))}
       </group>
 
-      {/* Gaming Mouse */}
       <group position={[0.88, 0.03, 0.08]}>
         <mesh castShadow>
           <capsuleGeometry args={[0.095, 0.14, 8, 16]} />
@@ -270,7 +262,7 @@ function KeyboardAndMouse() {
   );
 }
 
-function NeuralBrain({ onClick }: { onClick: () => void }) {
+function NeuralBrain({ onClick, zeroGravity }: { onClick: () => void; zeroGravity?: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -310,14 +302,16 @@ function NeuralBrain({ onClick }: { onClick: () => void }) {
     return { nodes: pts, lineGeo: geo };
   }, []);
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * (hovered ? 1.4 : 0.38);
+      groupRef.current.rotation.y += delta * (hovered ? 1.4 : zeroGravity ? 0.7 : 0.38);
+      const targetY = zeroGravity ? 2.3 + Math.sin(clock.getElapsedTime() * 1.5) * 0.25 : 1.65;
+      groupRef.current.position.y += (targetY - groupRef.current.position.y) * 0.05;
     }
   });
 
   return (
-    <Float speed={hovered ? 3.5 : 2} rotationIntensity={0.2} floatIntensity={0.35}>
+    <Float speed={zeroGravity ? 3.5 : hovered ? 3.5 : 2} rotationIntensity={zeroGravity ? 0.6 : 0.2} floatIntensity={zeroGravity ? 0.8 : 0.35}>
       <group
         ref={groupRef}
         position={[-2.15, 1.65, -0.2]}
@@ -364,13 +358,16 @@ function NeuralBrain({ onClick }: { onClick: () => void }) {
   );
 }
 
-function BlockchainCubes({ onClick }: { onClick: () => void }) {
+function BlockchainCubes({ onClick, zeroGravity }: { onClick: () => void; zeroGravity?: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
-    const t = clock.getElapsedTime() * (hovered ? 2.2 : 1.0);
+    const t = clock.getElapsedTime() * (hovered ? 2.2 : zeroGravity ? 1.6 : 1.0);
+    const targetY = zeroGravity ? 2.2 + Math.sin(t * 1.2) * 0.3 : 1.65;
+    groupRef.current.position.y += (targetY - groupRef.current.position.y) * 0.05;
+
     groupRef.current.children.forEach((child, idx) => {
       if (idx < 3) {
         child.rotation.x = t * 0.45 + idx;
@@ -386,7 +383,7 @@ function BlockchainCubes({ onClick }: { onClick: () => void }) {
   ];
 
   return (
-    <Float speed={1.8} rotationIntensity={0.15} floatIntensity={0.3}>
+    <Float speed={zeroGravity ? 3 : 1.8} rotationIntensity={zeroGravity ? 0.6 : 0.15} floatIntensity={zeroGravity ? 0.9 : 0.3}>
       <group
         ref={groupRef}
         position={[2.15, 1.65, -0.1]}
@@ -429,7 +426,6 @@ function BlockchainCubes({ onClick }: { onClick: () => void }) {
           </group>
         ))}
 
-        {/* Connecting cryptographic chain links */}
         <mesh position={[-0.16, 0.12, 0.09]} rotation={[0.2, 0.4, -0.55]}>
           <cylinderGeometry args={[0.012, 0.012, 0.52, 8]} />
           <meshStandardMaterial
@@ -459,15 +455,21 @@ function BlockchainCubes({ onClick }: { onClick: () => void }) {
   );
 }
 
-function DigitalGlobe({ onClick }: { onClick: () => void }) {
+function DigitalGlobe({ onClick, zeroGravity }: { onClick: () => void; zeroGravity?: boolean }) {
   const globeRef = useRef<THREE.Mesh>(null);
   const ringRef = useRef<THREE.Mesh>(null);
+  const floatingGroupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
-  useFrame((_, delta) => {
-    const mult = hovered ? 2.5 : 1.0;
+  useFrame(({ clock }, delta) => {
+    const mult = hovered ? 2.5 : zeroGravity ? 1.8 : 1.0;
     if (globeRef.current) globeRef.current.rotation.y += delta * 0.28 * mult;
     if (ringRef.current) ringRef.current.rotation.z += delta * 0.45 * mult;
+
+    if (floatingGroupRef.current) {
+      const targetY = zeroGravity ? 0.95 + Math.sin(clock.getElapsedTime() * 1.4) * 0.2 : 0;
+      floatingGroupRef.current.position.y += (targetY - floatingGroupRef.current.position.y) * 0.05;
+    }
   });
 
   return (
@@ -494,33 +496,37 @@ function DigitalGlobe({ onClick }: { onClick: () => void }) {
         <cylinderGeometry args={[0.24, 0.3, 0.08, 24]} />
         <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.25} />
       </mesh>
-      <mesh ref={globeRef}>
-        <sphereGeometry args={[0.32, 20, 20]} />
-        <meshStandardMaterial
-          color={hovered ? "#38bdf8" : "#0ea5e9"}
-          emissive="#0284c7"
-          emissiveIntensity={hovered ? 1.6 : 0.85}
-          wireframe
-        />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[0.24, 16, 16]} />
-        <meshStandardMaterial
-          color="#1e1b4b"
-          emissive="#3b82f6"
-          emissiveIntensity={0.35}
-          transparent
-          opacity={0.75}
-        />
-      </mesh>
-      <mesh ref={ringRef} rotation={[1.2, 0.35, 0]}>
-        <torusGeometry args={[0.45, 0.01, 10, 48]} />
-        <meshStandardMaterial
-          color="#a855f7"
-          emissive="#a855f7"
-          emissiveIntensity={hovered ? 3.0 : 1.8}
-        />
-      </mesh>
+
+      {/* Floating sphere and ring */}
+      <group ref={floatingGroupRef}>
+        <mesh ref={globeRef}>
+          <sphereGeometry args={[0.32, 20, 20]} />
+          <meshStandardMaterial
+            color={hovered ? "#38bdf8" : "#0ea5e9"}
+            emissive="#0284c7"
+            emissiveIntensity={hovered ? 1.6 : 0.85}
+            wireframe
+          />
+        </mesh>
+        <mesh>
+          <sphereGeometry args={[0.24, 16, 16]} />
+          <meshStandardMaterial
+            color="#1e1b4b"
+            emissive="#3b82f6"
+            emissiveIntensity={0.35}
+            transparent
+            opacity={0.75}
+          />
+        </mesh>
+        <mesh ref={ringRef} rotation={[1.2, 0.35, 0]}>
+          <torusGeometry args={[0.45, 0.01, 10, 48]} />
+          <meshStandardMaterial
+            color="#a855f7"
+            emissive="#a855f7"
+            emissiveIntensity={hovered ? 3.0 : 1.8}
+          />
+        </mesh>
+      </group>
 
       {hovered && (
         <Html position={[0, 0.55, 0]} center distanceFactor={6}>
@@ -533,14 +539,29 @@ function DigitalGlobe({ onClick }: { onClick: () => void }) {
   );
 }
 
-function DeveloperAstronaut({ onClick }: { onClick: () => void }) {
+function DeveloperAstronaut({ onClick, zeroGravity }: { onClick: () => void; zeroGravity?: boolean }) {
   const [hovered, setHovered] = useState(false);
   const [greeting, setGreeting] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     if (greeting && groupRef.current) {
       groupRef.current.rotation.y += delta * 4;
+    }
+    if (groupRef.current) {
+      const t = clock.getElapsedTime();
+      const targetY = zeroGravity ? 1.85 + Math.sin(t * 1.5) * 0.35 : 0.45;
+      const targetX = zeroGravity ? -1.15 + Math.cos(t * 0.8) * 0.25 : -1.68;
+      groupRef.current.position.y += (targetY - groupRef.current.position.y) * 0.04;
+      groupRef.current.position.x += (targetX - groupRef.current.position.x) * 0.04;
+
+      if (zeroGravity && !greeting) {
+        groupRef.current.rotation.z = Math.sin(t * 0.6) * 0.35;
+        groupRef.current.rotation.x = Math.sin(t * 0.8) * 0.25;
+      } else if (!greeting) {
+        groupRef.current.rotation.z = 0;
+        groupRef.current.rotation.x = 0;
+      }
     }
   });
 
@@ -552,7 +573,7 @@ function DeveloperAstronaut({ onClick }: { onClick: () => void }) {
   }
 
   return (
-    <Float speed={1.5} rotationIntensity={0.08} floatIntensity={0.14}>
+    <Float speed={zeroGravity ? 3.0 : 1.5} rotationIntensity={zeroGravity ? 0.7 : 0.08} floatIntensity={zeroGravity ? 1.2 : 0.14}>
       <group
         ref={groupRef}
         position={[-1.68, 0.45, 0.56]}
@@ -572,22 +593,18 @@ function DeveloperAstronaut({ onClick }: { onClick: () => void }) {
           document.body.style.cursor = "auto";
         }}
       >
-        {/* Backpack */}
         <mesh position={[0, 0.16, -0.14]} castShadow>
           <boxGeometry args={[0.24, 0.3, 0.12]} />
           <meshStandardMaterial color="#cbd5e1" roughness={0.3} metalness={0.5} />
         </mesh>
-        {/* Torso */}
         <mesh position={[0, 0.12, 0]} castShadow>
           <capsuleGeometry args={[0.14, 0.2, 8, 16]} />
           <meshStandardMaterial color="#f8fafc" roughness={0.25} metalness={0.2} />
         </mesh>
-        {/* Helmet */}
         <mesh position={[0, 0.42, 0]} castShadow>
           <sphereGeometry args={[0.16, 24, 24]} />
           <meshStandardMaterial color="#f8fafc" roughness={0.2} metalness={0.3} />
         </mesh>
-        {/* Gold Reflective Visor */}
         <mesh position={[0, 0.43, 0.08]}>
           <sphereGeometry args={[0.12, 20, 20]} />
           <meshStandardMaterial
@@ -598,7 +615,6 @@ function DeveloperAstronaut({ onClick }: { onClick: () => void }) {
             roughness={0.1}
           />
         </mesh>
-        {/* Legs */}
         <mesh position={[-0.08, -0.12, 0.08]} rotation={[1.2, 0, 0.08]}>
           <capsuleGeometry args={[0.055, 0.16, 6, 12]} />
           <meshStandardMaterial color="#e2e8f0" roughness={0.3} />
@@ -607,7 +623,6 @@ function DeveloperAstronaut({ onClick }: { onClick: () => void }) {
           <capsuleGeometry args={[0.055, 0.16, 6, 12]} />
           <meshStandardMaterial color="#e2e8f0" roughness={0.3} />
         </mesh>
-        {/* Mini Glowing Laptop */}
         <group position={[0, 0.04, 0.26]}>
           <mesh>
             <boxGeometry args={[0.26, 0.018, 0.18]} />
@@ -693,7 +708,6 @@ function HoloPanels() {
 function DeskSurface({ neonBarColor }: { neonBarColor: string }) {
   return (
     <group position={[0, 0, 0]}>
-      {/* Reflective obsidian desk top */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[14, 9]} />
         <MeshReflectorMaterial
@@ -711,7 +725,6 @@ function DeskSurface({ neonBarColor }: { neonBarColor: string }) {
         />
       </mesh>
 
-      {/* Neon LED edge bar along back of desk */}
       <mesh position={[0, 0.02, -1.25]}>
         <boxGeometry args={[6.4, 0.025, 0.04]} />
         <meshStandardMaterial
@@ -728,11 +741,13 @@ export function HeroScene({
   focus,
   reducedMotion,
   theme = "neon",
+  zeroGravity = false,
   onObjectClick,
 }: {
   focus: CameraFocus;
   reducedMotion: boolean;
   theme?: ThemeId;
+  zeroGravity?: boolean;
   onObjectClick?: (objectId: string) => void;
 }) {
   const currentTheme = THEME_CONFIG[theme] || THEME_CONFIG.neon;
@@ -747,7 +762,7 @@ export function HeroScene({
       <color attach="background" args={[currentTheme.bg]} />
       <fog attach="fog" args={[currentTheme.bg, 6, 16]} />
 
-      <ambientLight intensity={0.45} />
+      <ambientLight intensity={zeroGravity ? 0.65 : 0.45} />
       <directionalLight
         position={[3.5, 5.5, 4]}
         intensity={1.3}
@@ -762,16 +777,17 @@ export function HeroScene({
         <CurvedMonitor onClick={() => onObjectClick?.("monitor")} />
         <KeyboardAndMouse />
         <HoloPanels />
-        <NeuralBrain onClick={() => onObjectClick?.("brain")} />
-        <BlockchainCubes onClick={() => onObjectClick?.("blockchain")} />
-        <DigitalGlobe onClick={() => onObjectClick?.("globe")} />
-        <DeveloperAstronaut onClick={() => onObjectClick?.("astronaut")} />
+        <NeuralBrain onClick={() => onObjectClick?.("brain")} zeroGravity={zeroGravity} />
+        <BlockchainCubes onClick={() => onObjectClick?.("blockchain")} zeroGravity={zeroGravity} />
+        <DigitalGlobe onClick={() => onObjectClick?.("globe")} zeroGravity={zeroGravity} />
+        <DeveloperAstronaut onClick={() => onObjectClick?.("astronaut")} zeroGravity={zeroGravity} />
+
         {!reducedMotion && (
           <Sparkles
-            count={75}
-            scale={[9, 4.5, 6]}
-            size={2.2}
-            speed={0.4}
+            count={zeroGravity ? 150 : 75}
+            scale={[9, zeroGravity ? 7 : 4.5, 6]}
+            size={zeroGravity ? 3 : 2.2}
+            speed={zeroGravity ? 0.9 : 0.4}
             color={currentTheme.sparkles}
           />
         )}

@@ -13,8 +13,10 @@ import { EducationSection } from "./components/ui/EducationSection";
 import { AchievementsSection } from "./components/ui/AchievementsSection";
 import { ContactSection } from "./components/ui/ContactSection";
 import { InteractiveTerminal } from "./components/ui/InteractiveTerminal";
+import { ArcadeGameModal } from "./components/ui/ArcadeGameModal";
 import type { ThemeId } from "./components/canvas/HeroScene";
-import { Terminal as TerminalIcon } from "lucide-react";
+import { Gamepad2, Terminal as TerminalIcon } from "lucide-react";
+import { sounds } from "./utils/sound";
 
 export function App() {
   const githubData = useGitHubData(PROFILE.handle);
@@ -22,6 +24,7 @@ export function App() {
   const [lowPower, setLowPower] = useState(false);
   const [theme, setTheme] = useState<ThemeId>("neon");
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [isArcadeOpen, setIsArcadeOpen] = useState(false);
 
   useEffect(() => {
     const mqMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -75,8 +78,21 @@ export function App() {
         <ContactSection />
       </main>
 
-      {/* Floating CLI Terminal Toggle Button at bottom right */}
-      <aside aria-label="Quick Actions" className="fixed bottom-6 right-6 z-40">
+      {/* Floating HUD Actions at bottom right */}
+      <aside aria-label="Quick Actions" className="fixed bottom-6 right-6 z-40 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            sounds.warp();
+            setIsArcadeOpen(true);
+          }}
+          title="Play Cyber Snake Arcade Mini-Game"
+          className="group flex items-center gap-1.5 rounded-2xl border border-purple-500/40 bg-slate-950/85 px-3.5 py-3 font-mono text-xs text-purple-300 shadow-xl shadow-purple-500/20 backdrop-blur-md transition hover:scale-105 hover:border-purple-300 hover:bg-purple-950/40 active:scale-95"
+        >
+          <Gamepad2 className="h-4 w-4 transition group-hover:rotate-12 text-purple-400" />
+          <span className="font-semibold hidden sm:inline">Arcade</span>
+        </button>
+
         <button
           type="button"
           onClick={() => setIsTerminalOpen(true)}
@@ -95,11 +111,21 @@ export function App() {
       <InteractiveTerminal
         isOpen={isTerminalOpen}
         onClose={() => setIsTerminalOpen(false)}
+        onOpenArcade={() => {
+          setIsTerminalOpen(false);
+          setIsArcadeOpen(true);
+        }}
         onSwitchTheme={(t) => {
           if (["neon", "matrix", "amber", "cyber"].includes(t)) {
             setTheme(t as ThemeId);
           }
         }}
+      />
+
+      {/* Cyber Snake Arcade Mini-Game Modal */}
+      <ArcadeGameModal
+        isOpen={isArcadeOpen}
+        onClose={() => setIsArcadeOpen(false)}
       />
 
       <footer className="border-t border-slate-800/80 py-8 text-center font-mono text-xs text-slate-500">

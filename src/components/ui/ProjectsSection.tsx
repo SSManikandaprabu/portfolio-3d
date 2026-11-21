@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Github, Lock, X } from "lucide-react";
+import { ArrowUpRight, Github, Laptop, Lock, X } from "lucide-react";
 import { ProjectItem, PROJECTS } from "../../data/profile";
 import { SectionHeading } from "./SectionHeading";
 import { TiltCard } from "./TiltCard";
+import { ProjectPreviewModal } from "./ProjectPreviewModal";
 import { sounds } from "../../utils/sound";
 
 const FILTERS = ["All", "Systems", "Blockchain", "Full-Stack", "AI/ML"] as const;
@@ -11,6 +12,7 @@ const FILTERS = ["All", "Systems", "Blockchain", "Full-Stack", "AI/ML"] as const
 export function ProjectsSection() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   const [active, setActive] = useState<ProjectItem | null>(null);
+  const [previewProject, setPreviewProject] = useState<ProjectItem | null>(null);
 
   const items =
     filter === "All"
@@ -100,13 +102,25 @@ export function ProjectsSection() {
 
               <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80 pt-4">
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sounds.warp();
+                      setPreviewProject(project);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg bg-cyan-500/20 px-2.5 py-1.5 font-mono text-xs font-semibold text-cyan-200 ring-1 ring-cyan-400/40 transition hover:bg-cyan-500/30"
+                  >
+                    <Laptop className="h-3.5 w-3.5" />
+                    Preview
+                  </button>
                   <a
                     href={project.liveUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg bg-cyan-500/20 px-3 py-1.5 font-mono text-xs font-semibold text-cyan-200 ring-1 ring-cyan-400/40 transition hover:bg-cyan-500/30"
+                    onClick={() => sounds.click()}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 px-2.5 py-1.5 font-mono text-xs text-slate-300 transition hover:border-cyan-400/50 hover:text-white"
                   >
-                    Live Demo
+                    Live
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </a>
                   {project.githubUrl && (
@@ -114,11 +128,11 @@ export function ProjectsSection() {
                       href={project.githubUrl}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={() => sounds.click()}
                       aria-label={`${project.title} GitHub`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-700 px-3 py-1.5 font-mono text-xs text-slate-300 transition hover:border-cyan-400/50 hover:text-white"
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 px-2.5 py-1.5 font-mono text-xs text-slate-300 transition hover:border-cyan-400/50 hover:text-white"
                     >
                       <Github className="h-3.5 w-3.5" />
-                      Code
                     </a>
                   )}
                 </div>
@@ -191,13 +205,25 @@ export function ProjectsSection() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  sounds.warp();
+                  setPreviewProject(active);
+                  setActive(null);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20"
+              >
+                <Laptop className="h-4 w-4" />
+                Open Sandbox Preview
+              </button>
               <a
                 href={active.liveUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm text-slate-200 hover:border-cyan-400"
               >
-                Open Live Deployment
+                Direct URL
                 <ArrowUpRight className="h-4 w-4" />
               </a>
               {active.githubUrl && (
@@ -215,6 +241,12 @@ export function ProjectsSection() {
           </div>
         </div>
       )}
+
+      {/* Interactive Device Sandbox Modal */}
+      <ProjectPreviewModal
+        project={previewProject}
+        onClose={() => setPreviewProject(null)}
+      />
     </section>
   );
 }

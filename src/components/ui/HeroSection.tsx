@@ -77,6 +77,7 @@ export function HeroSection({
   onOpenTerminal: () => void;
 }) {
   const [focus, setFocus] = useState<CameraFocus>("overview");
+  const [zeroGravity, setZeroGravity] = useState(false);
 
   function handleObjectClick(objectId: string) {
     if (objectId === "monitor") {
@@ -108,6 +109,7 @@ export function HeroSection({
                 focus={focus}
                 reducedMotion={reducedMotion}
                 theme={theme}
+                zeroGravity={zeroGravity}
                 onObjectClick={handleObjectClick}
               />
             </Suspense>
@@ -116,6 +118,12 @@ export function HeroSection({
         {/* Subtle readability vignette */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-void/25 to-void/70" />
       </div>
+
+      {zeroGravity && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none rounded-full border border-purple-500/50 bg-slate-950/85 px-4 py-1.5 font-mono text-xs text-purple-300 shadow-xl shadow-purple-500/20 backdrop-blur-md animate-bounce">
+          🌌 ZERO-GRAVITY ENGAGED · ORBITAL PHYSICS ACTIVE
+        </div>
+      )}
 
       {/* Top Overlay Header */}
       <div className="relative z-10 mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6">
@@ -214,6 +222,26 @@ export function HeroSection({
                 </button>
               ))}
             </div>
+          )}
+
+          {/* Zero-G Physics Toggle */}
+          {!lowPower && (
+            <button
+              type="button"
+              onClick={() => {
+                sounds.warp();
+                setZeroGravity((v) => !v);
+              }}
+              title="Toggle Zero-Gravity Space Physics"
+              className={`inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 font-mono text-xs font-medium transition ${
+                zeroGravity
+                  ? "bg-purple-500/30 text-purple-200 ring-2 ring-purple-400 shadow-lg shadow-purple-500/30"
+                  : "glass-panel text-slate-300 hover:text-white hover:border-cyan-400/50"
+              }`}
+            >
+              <Orbit className={`h-3.5 w-3.5 ${zeroGravity ? "animate-spin text-purple-300" : "text-cyan-400"}`} />
+              <span>Zero-G: {zeroGravity ? "ON" : "OFF"}</span>
+            </button>
           )}
 
           {/* Theme Palette Switcher */}

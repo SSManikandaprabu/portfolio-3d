@@ -19,6 +19,7 @@ const COMMANDS = [
   "education",
   "contact",
   "matrix",
+  "game",
   "clear",
   "sudo",
 ];
@@ -27,10 +28,12 @@ export function InteractiveTerminal({
   isOpen,
   onClose,
   onSwitchTheme,
+  onOpenArcade,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSwitchTheme?: (theme: string) => void;
+  onOpenArcade?: () => void;
 }) {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
@@ -123,10 +126,23 @@ export function InteractiveTerminal({
   experience   - Display industry career timeline & internships
   education    - Display SRM IST credentials, degree, and CGPA
   contact      - Show developer email, LinkedIn, and GitHub links
+  game         - Launch Cyber Snake retro arcade mini-game
   matrix       - Trigger real-time digital rain stream
   theme <id>   - Change 3D workspace theme (neon, matrix, amber, cyber)
   clear        - Clear the terminal console
   sudo         - Root elevation request`,
+        });
+        break;
+
+      case "game":
+      case "snake":
+      case "play":
+        onOpenArcade?.();
+        sounds.success();
+        newLines.push({
+          id: Math.random().toString(),
+          type: "output",
+          text: "🎮 Cyber Snake Arcade initialized! Launching retro mini-game console...",
         });
         break;
 
