@@ -21,7 +21,7 @@ export function ProjectsSection() {
       <SectionHeading
         eyebrow="03 // Floating 3D Showcases"
         title="Featured Deployed Projects"
-        subtitle="Six production systems shipped across client-side WebAssembly, Polygon smart contracts, real-time PWAs, and deep learning."
+        subtitle="Flagship production systems shipped across client-side WebAssembly, Polygon smart contracts, real-time PWAs, and deep learning."
       />
 
       <div className="mb-8 flex flex-wrap gap-2">

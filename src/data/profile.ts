@@ -45,7 +45,7 @@ export const PROFILE = {
   linkedinUrl: "https://www.linkedin.com/in/s-s-manikanda-prabu-40070b325/",
   portfolioUrl:
     "https://ssmanikandaprabu.github.io/S.S-MANIKANDA-PRABU/manikanda_portfolio.html",
-  bio: "Third-year Computer Science and Engineering undergraduate (CGPA 8.44) building products across client-side systems, full-stack web development, blockchain verification, and applied AI/ML. Shipped PDFly, CertChain, Tuition Desk, SRM Note Finder, HarvestAI, and CareFlow — actively seeking Software Engineering Internships.",
+  bio: "Third-year Computer Science and Engineering undergraduate (CGPA 8.44) building production products across full-stack web development and high-concurrency systems. Built platforms serving 1,000+ active students (SRM Note Finder), client-side privacy tools (PDFly), blockchain registries (CertChain), and hospital workflows (CareFlow). Experience at Titan Company, TEAL, Growfinix, and incoming Java Development Intern (Associate L1) at Infotact Solutions; seeking software engineering internships.",
   education: {
     institution: "SRM Institute of Science and Technology, Ramapuram, Chennai",
     degree: "B.Tech, Computer Science and Engineering",
@@ -63,6 +63,52 @@ export const PROFILE = {
 };
 
 export const PROJECTS: ProjectItem[] = [
+  {
+    id: "srm-note-finder",
+    title: "SRM Note Finder",
+    subtitle: "Academic Platform (1,000+ Active Users)",
+    category: "Full-Stack",
+    stack: [
+      "React",
+      "Vite",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "Socket.io",
+      "JWT",
+      "Vercel Edge CDN",
+    ],
+    highlights: [
+      "Scaled an academic resource hub serving 1,000+ active university students with unit-wise lecture notes, PYQs, and interactive GPA/attendance tools.",
+      "Architected HTTP edge caching (stale-while-revalidate) and in-memory query cache for sub-30ms response times; built real-time Socket.io chat and admin portal.",
+    ],
+    liveUrl: "https://srm-note-finder.vercel.app",
+    githubUrl: "https://github.com/SSManikandaprabu/srm-note-finder",
+    accent: "cyan",
+  },
+  {
+    id: "mavora",
+    title: "MAVORA",
+    subtitle: "3D Luxury Chocolate Flagship & Direct UPI Engine",
+    category: "Full-Stack",
+    stack: [
+      "React 19",
+      "Three.js",
+      "React Three Fiber",
+      "WebGL",
+      "Tailwind CSS",
+      "Node.js",
+      "SQLite WAL",
+    ],
+    highlights: [
+      "Architected an immersive 3D digital storefront with interactive Three.js chocolate physics, liquid gold shaders, and 60 FPS animations.",
+      "Engineered MAVORA PAY, a 0%-fee Direct UPI engine with dynamic vector QR generation, mobile deep links, and automated SSE bank alert reconciliation.",
+    ],
+    liveUrl: "https://mavora-luxury-chocolate.vercel.app",
+    githubUrl: "https://github.com/SSManikandaprabu/mavora-luxury-chocolate",
+    isPrivateRepo: true,
+    accent: "purple",
+  },
   {
     id: "pdfly",
     title: "PDFly",
@@ -130,35 +176,6 @@ export const PROJECTS: ProjectItem[] = [
     accent: "blue",
   },
   {
-    id: "srm-note-finder",
-    title: "SRM Note Finder",
-    subtitle: "Academic Resource & Student Platform",
-    category: "Full-Stack",
-    stack: ["React", "Vite", "Node.js", "Express", "MongoDB", "Socket.io", "JWT"],
-    highlights: [
-      "Built a full-stack academic hub organizing semester and unit-wise study notes, previous-year question papers, and SGPA/CGPA calculators.",
-      "Integrated JWT authentication, real-time Socket.io community and private chat with moderation, PDF verification, and an admin portal.",
-    ],
-    liveUrl: "https://srm-note-finder.vercel.app",
-    githubUrl: "https://github.com/SSManikandaprabu/srm-note-finder",
-    accent: "cyan",
-  },
-  {
-    id: "harvestai",
-    title: "HarvestAI",
-    subtitle: "Fruit Maturity Classification (96.0% Accuracy)",
-    category: "AI/ML",
-    stack: ["Python", "TensorFlow/Keras", "MobileNetV2", "Flask"],
-    highlights: [
-      "Built a web app classifying fruit as Unripe, Ripe, or Overripe, with image validation and Flask-based predictions.",
-      "Reported 96.0% test accuracy (macro F1 0.959) on 450 held-out images.",
-    ],
-    liveUrl: "https://harvestai-fruit-maturity-classification.onrender.com",
-    githubUrl:
-      "https://github.com/SSManikandaprabu/HarvestAI-Fruit-Maturity-Classification",
-    accent: "purple",
-  },
-  {
     id: "careflow",
     title: "CareFlow",
     subtitle: "Hospital Booking & Patient Queue System",
@@ -180,9 +197,35 @@ export const PROJECTS: ProjectItem[] = [
     githubUrl: "https://github.com/SSManikandaprabu/careflow-hospital",
     accent: "blue",
   },
+  {
+    id: "harvestai",
+    title: "HarvestAI",
+    subtitle: "Fruit Maturity Classification (96.0% Accuracy)",
+    category: "AI/ML",
+    stack: ["Python", "TensorFlow/Keras", "MobileNetV2", "Flask"],
+    highlights: [
+      "Built a web app classifying fruit as Unripe, Ripe, or Overripe, with image validation and Flask-based predictions.",
+      "Reported 96.0% test accuracy (macro F1 0.959) on 450 held-out images.",
+    ],
+    liveUrl: "https://harvestai-fruit-maturity-classification.onrender.com",
+    githubUrl:
+      "https://github.com/SSManikandaprabu/HarvestAI-Fruit-Maturity-Classification",
+    accent: "purple",
+  },
 ];
 
 export const EXPERIENCES: ExperienceItem[] = [
+  {
+    role: "Java Development Intern (Associate L1)",
+    company: "Infotact Solutions",
+    location: "Remote",
+    period: "Nov 2026 – Feb 2027",
+    tag: "Enterprise Backend",
+    highlights: [
+      "Selected for Java Development internship building enterprise backend services using Core Java, OOP, JDBC, and Spring Boot REST APIs.",
+      "Working with MySQL/PostgreSQL persistence, debugging, code reviews, and industry software development practices.",
+    ],
+  },
   {
     role: "Digital & Automation Intern",
     company: "Titan Engineering & Automation Limited (TEAL)",
@@ -221,6 +264,7 @@ export const SKILL_GROUPS: SkillGroup[] = [
     category: "Languages",
     accent: "cyan",
     items: [
+      { name: "Java", detail: "Core Java, OOP, JDBC & Spring Boot" },
       { name: "Python", detail: "AI/ML, Flask APIs, Data Pipelines" },
       { name: "TypeScript / JS", detail: "ES6+, Web Workers, Client-Side" },
       { name: "Solidity", detail: "Polygon Smart Contracts" },
@@ -230,15 +274,15 @@ export const SKILL_GROUPS: SkillGroup[] = [
     ],
   },
   {
-    category: "Web & Blockchain",
+    category: "Web & Backend",
     accent: "purple",
     items: [
+      { name: "Spring Boot", detail: "Enterprise REST APIs & MVC" },
       { name: "React & Next.js", detail: "SSR, App Router, SPA Architecture" },
       { name: "Node.js & Express", detail: "REST APIs & Auth Middleware" },
       { name: "Socket.io", detail: "Real-Time Chat & Queue Events" },
       { name: "Polygon & Merkle Proofs", detail: "Cryptographic Verification" },
-      { name: "WebAssembly & Web Crypto", detail: "In-Browser Security & PDF" },
-      { name: "Flutter & Flask", detail: "Cross-Platform & Python Web" },
+      { name: "Web Crypto & Web Workers", detail: "In-Browser Security & PDF" },
     ],
   },
   {
@@ -255,8 +299,9 @@ export const SKILL_GROUPS: SkillGroup[] = [
     category: "Data, Cloud & Tools",
     accent: "cyan",
     items: [
-      { name: "PostgreSQL / Supabase", detail: "Prisma ORM & Edge REST" },
+      { name: "MySQL & PostgreSQL", detail: "Persistence, Indexing & Schemas" },
       { name: "MongoDB & SQLite", detail: "NoSQL & Local WAL Storage" },
+      { name: "Supabase & Prisma", detail: "Postgres BaaS & ORM" },
       { name: "AWS (Developer Prep)", detail: "Cloud Deployment Patterns" },
       { name: "Git, Vercel & Render", detail: "CI/CD & Production Hosting" },
     ],

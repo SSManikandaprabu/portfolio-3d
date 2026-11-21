@@ -8,8 +8,8 @@ export function AboutSection({ publicRepos }: { publicRepos: number }) {
   const stats = [
     { label: "B.Tech CSE CGPA", value: "8.44 / 10", icon: GraduationCap },
     { label: "Public GitHub Repos", value: String(publicRepos), icon: Code2 },
-    { label: "Deployed Products", value: "6 Flagships", icon: Cpu },
-    { label: "Industry Internships", value: "3 Completed", icon: Briefcase },
+    { label: "Deployed Products", value: "7 Flagships", icon: Cpu },
+    { label: "Industry Internships", value: "4 Roles", icon: Briefcase },
   ];
 
   return (

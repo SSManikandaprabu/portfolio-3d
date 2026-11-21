@@ -10,7 +10,7 @@ export function ExperienceSection() {
       <SectionHeading
         eyebrow="05 // 3D Career Timeline"
         title="Industry Experience"
-        subtitle="Hands-on engineering across industrial automation, enterprise supply-chain systems, and full-stack web delivery."
+        subtitle="Hands-on engineering across enterprise backend services, industrial automation, supply-chain systems, and full-stack web delivery."
       />
 
       <div className="relative space-y-6 before:absolute before:bottom-4 before:left-5 before:top-4 before:w-px before:bg-gradient-to-b before:from-cyan-400 before:via-purple-500 before:to-transparent md:before:left-8">
