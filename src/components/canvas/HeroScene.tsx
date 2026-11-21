@@ -1,15 +1,63 @@
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
   Float,
   MeshReflectorMaterial,
   OrbitControls,
   Sparkles,
+  Html,
 } from "@react-three/drei";
 import * as THREE from "three";
 import { createHoloPanelTexture, createMonitorCodeTexture } from "./textures";
+import { sounds } from "../../utils/sound";
 
 export type CameraFocus = "overview" | "monitor" | "brain" | "blockchain" | "globe";
+export type ThemeId = "neon" | "matrix" | "amber" | "cyber";
+
+export const THEME_CONFIG: Record<
+  ThemeId,
+  {
+    name: string;
+    bg: string;
+    primaryLight: string;
+    secondaryLight: string;
+    neonBar: string;
+    sparkles: string;
+  }
+> = {
+  neon: {
+    name: "Cyber Neon",
+    bg: "#040611",
+    primaryLight: "#06b6d4",
+    secondaryLight: "#a855f7",
+    neonBar: "#22d3ee",
+    sparkles: "#67e8f9",
+  },
+  matrix: {
+    name: "Matrix Hacker",
+    bg: "#020f06",
+    primaryLight: "#10b981",
+    secondaryLight: "#84cc16",
+    neonBar: "#22c55e",
+    sparkles: "#4ade80",
+  },
+  amber: {
+    name: "Solar Gold",
+    bg: "#100802",
+    primaryLight: "#f59e0b",
+    secondaryLight: "#f97316",
+    neonBar: "#fbbf24",
+    sparkles: "#fde047",
+  },
+  cyber: {
+    name: "Deep Plasma",
+    bg: "#080415",
+    primaryLight: "#3b82f6",
+    secondaryLight: "#ec4899",
+    neonBar: "#a855f7",
+    sparkles: "#f472b6",
+  },
+};
 
 const CAMERA_PRESETS: Record<
   CameraFocus,
@@ -48,19 +96,40 @@ function CameraRig({ focus }: { focus: CameraFocus }) {
   return null;
 }
 
-function CurvedMonitor() {
+function CurvedMonitor({
+  onClick,
+}: {
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
   const codeTexture = useMemo(() => createMonitorCodeTexture(), []);
 
   return (
-    <group position={[0, 1.28, -0.55]}>
-      {/* Curved screen mesh (concave arc facing user) */}
+    <group
+      position={[0, 1.28, -0.55]}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = "pointer";
+        sounds.hover();
+      }}
+      onPointerOut={() => {
+        setHovered(false);
+        document.body.style.cursor = "auto";
+      }}
+    >
+      {/* Curved screen mesh */}
       <mesh rotation={[0, Math.PI - 0.55, 0]}>
         <cylinderGeometry args={[2.1, 2.1, 1.08, 40, 1, true, 0, 1.1]} />
         <meshStandardMaterial
           map={codeTexture}
           emissiveMap={codeTexture}
-          emissive="#ffffff"
-          emissiveIntensity={0.85}
+          emissive={hovered ? "#38bdf8" : "#ffffff"}
+          emissiveIntensity={hovered ? 1.4 : 0.85}
           side={THREE.BackSide}
           roughness={0.2}
           metalness={0.1}
@@ -71,7 +140,7 @@ function CurvedMonitor() {
       <mesh position={[0, 0, -0.025]} rotation={[0, Math.PI - 0.57, 0]}>
         <cylinderGeometry args={[2.13, 2.13, 1.14, 40, 1, true, 0, 1.14]} />
         <meshStandardMaterial
-          color="#111827"
+          color={hovered ? "#0284c7" : "#111827"}
           metalness={0.85}
           roughness={0.25}
           side={THREE.DoubleSide}
@@ -88,22 +157,48 @@ function CurvedMonitor() {
         <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.25} />
       </mesh>
 
-      {/* Subtle cyan ambient glow from screen */}
-      <pointLight position={[0, 0, 0.8]} color="#38bdf8" intensity={1.8} distance={4} />
+      {/* Ambient glow from screen */}
+      <pointLight position={[0, 0, 0.8]} color="#38bdf8" intensity={hovered ? 3.0 : 1.8} distance={4} />
+
+      {hovered && (
+        <Html position={[0, 0.7, 0.2]} center distanceFactor={6}>
+          <div className="rounded-full border border-cyan-400/80 bg-slate-950/90 px-3 py-1 font-mono text-[11px] text-cyan-300 shadow-lg shadow-cyan-500/40 backdrop-blur-md pointer-events-none whitespace-nowrap animate-pulse">
+            ⚡ Click to Open Interactive Terminal
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
 
 function KeyboardAndMouse() {
   const keysGroupRef = useRef<THREE.Group>(null);
+  const [activeKeyIdx, setActiveKeyIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    function handleKeyDown() {
+      const randomIdx = Math.floor(Math.random() * 52);
+      setActiveKeyIdx(randomIdx);
+      sounds.keypress();
+      setTimeout(() => setActiveKeyIdx(null), 120);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useFrame(({ clock }) => {
     if (!keysGroupRef.current) return;
     const t = clock.getElapsedTime();
     keysGroupRef.current.children.forEach((child, idx) => {
       const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial;
-      const hue = ((t * 0.12 + idx * 0.025) % 1 + 1) % 1;
-      mat.emissive.setHSL(0.52 + hue * 0.28, 0.9, 0.5);
+      if (idx === activeKeyIdx) {
+        mat.emissive.set("#38bdf8");
+        mat.emissiveIntensity = 3.5;
+      } else {
+        const hue = ((t * 0.12 + idx * 0.025) % 1 + 1) % 1;
+        mat.emissive.setHSL(0.52 + hue * 0.28, 0.9, 0.5);
+        mat.emissiveIntensity = 0.65;
+      }
     });
   });
 
@@ -134,7 +229,16 @@ function KeyboardAndMouse() {
       {/* RGB Keycaps */}
       <group ref={keysGroupRef} position={[-0.18, 0.055, 0.04]} rotation={[0.06, 0, 0]}>
         {keys.map(([x, z], idx) => (
-          <mesh key={idx} position={[x, 0, z]} castShadow>
+          <mesh
+            key={idx}
+            position={[x, idx === activeKeyIdx ? -0.01 : 0, z]}
+            castShadow
+            onClick={() => {
+              setActiveKeyIdx(idx);
+              sounds.keypress();
+              setTimeout(() => setActiveKeyIdx(null), 150);
+            }}
+          >
             <boxGeometry args={[0.082, 0.026, 0.064]} />
             <meshStandardMaterial
               color="#1e293b"
@@ -166,8 +270,9 @@ function KeyboardAndMouse() {
   );
 }
 
-function NeuralBrain() {
+function NeuralBrain({ onClick }: { onClick: () => void }) {
   const groupRef = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
 
   const { nodes, lineGeo } = useMemo(() => {
     const pts: THREE.Vector3[] = [];
@@ -207,38 +312,65 @@ function NeuralBrain() {
 
   useFrame((_, delta) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.38;
+      groupRef.current.rotation.y += delta * (hovered ? 1.4 : 0.38);
     }
   });
 
   return (
-    <Float speed={2} rotationIntensity={0.2} floatIntensity={0.35}>
-      <group ref={groupRef} position={[-2.15, 1.65, -0.2]}>
+    <Float speed={hovered ? 3.5 : 2} rotationIntensity={0.2} floatIntensity={0.35}>
+      <group
+        ref={groupRef}
+        position={[-2.15, 1.65, -0.2]}
+        onClick={(e) => {
+          e.stopPropagation();
+          sounds.click();
+          onClick();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = "pointer";
+          sounds.hover();
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = "auto";
+        }}
+      >
         <lineSegments geometry={lineGeo}>
-          <lineBasicMaterial color="#38bdf8" transparent opacity={0.5} />
+          <lineBasicMaterial color={hovered ? "#67e8f9" : "#38bdf8"} transparent opacity={hovered ? 0.9 : 0.5} />
         </lineSegments>
         {nodes.map((p, idx) => (
           <mesh key={idx} position={[p.x, p.y, p.z]}>
-            <sphereGeometry args={[0.028, 12, 12]} />
+            <sphereGeometry args={[hovered ? 0.036 : 0.028, 12, 12]} />
             <meshStandardMaterial
               color={idx % 2 === 0 ? "#22d3ee" : "#c084fc"}
               emissive={idx % 2 === 0 ? "#06b6d4" : "#a855f7"}
-              emissiveIntensity={2.2}
+              emissiveIntensity={hovered ? 3.5 : 2.2}
             />
           </mesh>
         ))}
-        <pointLight color="#a855f7" intensity={1.4} distance={2.8} />
+        <pointLight color="#a855f7" intensity={hovered ? 3.0 : 1.4} distance={2.8} />
+
+        {hovered && (
+          <Html position={[0, 0.65, 0]} center distanceFactor={6}>
+            <div className="rounded-full border border-purple-400/80 bg-slate-950/90 px-3 py-1 font-mono text-[11px] text-purple-300 shadow-lg shadow-purple-500/40 backdrop-blur-md pointer-events-none whitespace-nowrap animate-pulse">
+              🧠 AI Neural Engine · MobileNetV2 96%
+            </div>
+          </Html>
+        )}
       </group>
     </Float>
   );
 }
 
-function BlockchainCubes() {
+function BlockchainCubes({ onClick }: { onClick: () => void }) {
   const groupRef = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
-    const t = clock.getElapsedTime();
+    const t = clock.getElapsedTime() * (hovered ? 2.2 : 1.0);
     groupRef.current.children.forEach((child, idx) => {
       if (idx < 3) {
         child.rotation.x = t * 0.45 + idx;
@@ -255,7 +387,25 @@ function BlockchainCubes() {
 
   return (
     <Float speed={1.8} rotationIntensity={0.15} floatIntensity={0.3}>
-      <group ref={groupRef} position={[2.15, 1.65, -0.1]}>
+      <group
+        ref={groupRef}
+        position={[2.15, 1.65, -0.1]}
+        onClick={(e) => {
+          e.stopPropagation();
+          sounds.click();
+          onClick();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = "pointer";
+          sounds.hover();
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = "auto";
+        }}
+      >
         {positions.map((pos, idx) => (
           <group key={idx} position={pos}>
             <mesh>
@@ -263,7 +413,7 @@ function BlockchainCubes() {
               <meshPhysicalMaterial
                 color={idx === 1 ? "#a855f7" : "#06b6d4"}
                 transparent
-                opacity={0.42}
+                opacity={hovered ? 0.75 : 0.42}
                 roughness={0.1}
                 metalness={0.4}
                 transmission={0.3}
@@ -285,7 +435,7 @@ function BlockchainCubes() {
           <meshStandardMaterial
             color="#67e8f9"
             emissive="#06b6d4"
-            emissiveIntensity={2}
+            emissiveIntensity={hovered ? 3.5 : 2}
           />
         </mesh>
         <mesh position={[0.25, -0.11, 0.06]} rotation={[-0.25, 0.3, -0.5]}>
@@ -293,25 +443,52 @@ function BlockchainCubes() {
           <meshStandardMaterial
             color="#c084fc"
             emissive="#a855f7"
-            emissiveIntensity={2}
+            emissiveIntensity={hovered ? 3.5 : 2}
           />
         </mesh>
+
+        {hovered && (
+          <Html position={[0, 0.65, 0]} center distanceFactor={6}>
+            <div className="rounded-full border border-cyan-400/80 bg-slate-950/90 px-3 py-1 font-mono text-[11px] text-cyan-300 shadow-lg shadow-cyan-500/40 backdrop-blur-md pointer-events-none whitespace-nowrap animate-pulse">
+              ⛓️ Polygon Layer-2 Merkle Tree
+            </div>
+          </Html>
+        )}
       </group>
     </Float>
   );
 }
 
-function DigitalGlobe() {
+function DigitalGlobe({ onClick }: { onClick: () => void }) {
   const globeRef = useRef<THREE.Mesh>(null);
   const ringRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
 
   useFrame((_, delta) => {
-    if (globeRef.current) globeRef.current.rotation.y += delta * 0.28;
-    if (ringRef.current) ringRef.current.rotation.z += delta * 0.45;
+    const mult = hovered ? 2.5 : 1.0;
+    if (globeRef.current) globeRef.current.rotation.y += delta * 0.28 * mult;
+    if (ringRef.current) ringRef.current.rotation.z += delta * 0.45 * mult;
   });
 
   return (
-    <group position={[1.72, 0.62, 0.42]}>
+    <group
+      position={[1.72, 0.62, 0.42]}
+      onClick={(e) => {
+        e.stopPropagation();
+        sounds.click();
+        onClick();
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = "pointer";
+        sounds.hover();
+      }}
+      onPointerOut={() => {
+        setHovered(false);
+        document.body.style.cursor = "auto";
+      }}
+    >
       {/* Pedestal */}
       <mesh position={[0, -0.55, 0]} castShadow>
         <cylinderGeometry args={[0.24, 0.3, 0.08, 24]} />
@@ -320,9 +497,9 @@ function DigitalGlobe() {
       <mesh ref={globeRef}>
         <sphereGeometry args={[0.32, 20, 20]} />
         <meshStandardMaterial
-          color="#0ea5e9"
+          color={hovered ? "#38bdf8" : "#0ea5e9"}
           emissive="#0284c7"
-          emissiveIntensity={0.85}
+          emissiveIntensity={hovered ? 1.6 : 0.85}
           wireframe
         />
       </mesh>
@@ -341,17 +518,60 @@ function DigitalGlobe() {
         <meshStandardMaterial
           color="#a855f7"
           emissive="#a855f7"
-          emissiveIntensity={1.8}
+          emissiveIntensity={hovered ? 3.0 : 1.8}
         />
       </mesh>
+
+      {hovered && (
+        <Html position={[0, 0.55, 0]} center distanceFactor={6}>
+          <div className="rounded-full border border-cyan-400/80 bg-slate-950/90 px-3 py-1 font-mono text-[11px] text-cyan-300 shadow-lg shadow-cyan-500/40 backdrop-blur-md pointer-events-none whitespace-nowrap animate-pulse">
+            📍 Hosur &amp; Chennai, India
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
 
-function DeveloperAstronaut() {
+function DeveloperAstronaut({ onClick }: { onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  const [greeting, setGreeting] = useState(false);
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((_, delta) => {
+    if (greeting && groupRef.current) {
+      groupRef.current.rotation.y += delta * 4;
+    }
+  });
+
+  function handleClick() {
+    sounds.success();
+    setGreeting(true);
+    onClick();
+    setTimeout(() => setGreeting(false), 2200);
+  }
+
   return (
     <Float speed={1.5} rotationIntensity={0.08} floatIntensity={0.14}>
-      <group position={[-1.68, 0.45, 0.56]} rotation={[0, 0.42, 0]}>
+      <group
+        ref={groupRef}
+        position={[-1.68, 0.45, 0.56]}
+        rotation={[0, 0.42, 0]}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleClick();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = "pointer";
+          sounds.hover();
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = "auto";
+        }}
+      >
         {/* Backpack */}
         <mesh position={[0, 0.16, -0.14]} castShadow>
           <boxGeometry args={[0.24, 0.3, 0.12]} />
@@ -373,7 +593,7 @@ function DeveloperAstronaut() {
           <meshStandardMaterial
             color="#f59e0b"
             emissive="#b45309"
-            emissiveIntensity={0.4}
+            emissiveIntensity={hovered ? 0.9 : 0.4}
             metalness={0.95}
             roughness={0.1}
           />
@@ -402,6 +622,20 @@ function DeveloperAstronaut() {
             />
           </mesh>
         </group>
+
+        {greeting ? (
+          <Html position={[0, 0.75, 0]} center distanceFactor={5}>
+            <div className="rounded-xl border border-cyan-400 bg-slate-950/95 px-3 py-1.5 font-mono text-xs text-cyan-200 shadow-xl shadow-cyan-500/50 backdrop-blur-md pointer-events-none whitespace-nowrap animate-bounce">
+              🚀 &ldquo;Hey! I&apos;m Manikanda Prabu. Welcome!&rdquo;
+            </div>
+          </Html>
+        ) : hovered ? (
+          <Html position={[0, 0.75, 0]} center distanceFactor={5}>
+            <div className="rounded-full border border-cyan-400/80 bg-slate-950/90 px-3 py-1 font-mono text-[11px] text-cyan-300 shadow-lg shadow-cyan-500/40 backdrop-blur-md pointer-events-none whitespace-nowrap">
+              👋 Click to Say Hi!
+            </div>
+          </Html>
+        ) : null}
       </group>
     </Float>
   );
@@ -456,7 +690,7 @@ function HoloPanels() {
   );
 }
 
-function DeskSurface() {
+function DeskSurface({ neonBarColor }: { neonBarColor: string }) {
   return (
     <group position={[0, 0, 0]}>
       {/* Reflective obsidian desk top */}
@@ -481,8 +715,8 @@ function DeskSurface() {
       <mesh position={[0, 0.02, -1.25]}>
         <boxGeometry args={[6.4, 0.025, 0.04]} />
         <meshStandardMaterial
-          color="#22d3ee"
-          emissive="#06b6d4"
+          color={neonBarColor}
+          emissive={neonBarColor}
           emissiveIntensity={2.6}
         />
       </mesh>
@@ -493,10 +727,16 @@ function DeskSurface() {
 export function HeroScene({
   focus,
   reducedMotion,
+  theme = "neon",
+  onObjectClick,
 }: {
   focus: CameraFocus;
   reducedMotion: boolean;
+  theme?: ThemeId;
+  onObjectClick?: (objectId: string) => void;
 }) {
+  const currentTheme = THEME_CONFIG[theme] || THEME_CONFIG.neon;
+
   return (
     <Canvas
       shadows
@@ -504,8 +744,8 @@ export function HeroScene({
       camera={{ position: [0, 2.35, 6.4], fov: 44 }}
       className="h-full w-full"
     >
-      <color attach="background" args={["#040611"]} />
-      <fog attach="fog" args={["#040611", 6, 16]} />
+      <color attach="background" args={[currentTheme.bg]} />
+      <fog attach="fog" args={[currentTheme.bg, 6, 16]} />
 
       <ambientLight intensity={0.45} />
       <directionalLight
@@ -514,25 +754,25 @@ export function HeroScene({
         color="#dbeafe"
         castShadow
       />
-      <pointLight position={[-3.5, 2.4, 1.5]} color="#a855f7" intensity={2.4} />
-      <pointLight position={[3.5, 2.2, 1.5]} color="#06b6d4" intensity={2.4} />
+      <pointLight position={[-3.5, 2.4, 1.5]} color={currentTheme.secondaryLight} intensity={2.6} />
+      <pointLight position={[3.5, 2.2, 1.5]} color={currentTheme.primaryLight} intensity={2.6} />
 
       <Suspense fallback={null}>
-        <DeskSurface />
-        <CurvedMonitor />
+        <DeskSurface neonBarColor={currentTheme.neonBar} />
+        <CurvedMonitor onClick={() => onObjectClick?.("monitor")} />
         <KeyboardAndMouse />
         <HoloPanels />
-        <NeuralBrain />
-        <BlockchainCubes />
-        <DigitalGlobe />
-        <DeveloperAstronaut />
+        <NeuralBrain onClick={() => onObjectClick?.("brain")} />
+        <BlockchainCubes onClick={() => onObjectClick?.("blockchain")} />
+        <DigitalGlobe onClick={() => onObjectClick?.("globe")} />
+        <DeveloperAstronaut onClick={() => onObjectClick?.("astronaut")} />
         {!reducedMotion && (
           <Sparkles
-            count={65}
+            count={75}
             scale={[9, 4.5, 6]}
-            size={2}
-            speed={0.35}
-            color="#67e8f9"
+            size={2.2}
+            speed={0.4}
+            color={currentTheme.sparkles}
           />
         )}
         <CameraRig focus={focus} />

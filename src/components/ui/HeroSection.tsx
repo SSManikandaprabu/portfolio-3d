@@ -9,9 +9,12 @@ import {
   Globe,
   Monitor,
   Orbit,
+  Palette,
+  Terminal as TerminalIcon,
 } from "lucide-react";
 import { PROFILE } from "../../data/profile";
-import type { CameraFocus } from "../canvas/HeroScene";
+import type { CameraFocus, ThemeId } from "../canvas/HeroScene";
+import { sounds } from "../../utils/sound";
 
 const LazyHeroScene = lazy(() =>
   import("../canvas/HeroScene").then((m) => ({ default: m.HeroScene }))
@@ -40,6 +43,13 @@ const FOCUS_OPTIONS: { id: CameraFocus; label: string; icon: typeof Monitor }[] 
   { id: "globe", label: "Globe", icon: Globe },
 ];
 
+const THEME_OPTIONS: { id: ThemeId; label: string; color: string }[] = [
+  { id: "neon", label: "Neon", color: "bg-cyan-400" },
+  { id: "matrix", label: "Matrix", color: "bg-emerald-400" },
+  { id: "amber", label: "Gold", color: "bg-amber-400" },
+  { id: "cyber", label: "Plasma", color: "bg-purple-400" },
+];
+
 function FallbackBackdrop() {
   return (
     <div className="cyber-grid-bg relative h-full w-full overflow-hidden bg-gradient-to-b from-[#070b1e] via-void to-void">
@@ -56,11 +66,31 @@ function FallbackBackdrop() {
 export function HeroSection({
   lowPower,
   reducedMotion,
+  theme,
+  onThemeChange,
+  onOpenTerminal,
 }: {
   lowPower: boolean;
   reducedMotion: boolean;
+  theme: ThemeId;
+  onThemeChange: (t: ThemeId) => void;
+  onOpenTerminal: () => void;
 }) {
   const [focus, setFocus] = useState<CameraFocus>("overview");
+
+  function handleObjectClick(objectId: string) {
+    if (objectId === "monitor") {
+      onOpenTerminal();
+    } else if (objectId === "brain") {
+      setFocus("brain");
+    } else if (objectId === "blockchain") {
+      setFocus("blockchain");
+    } else if (objectId === "globe") {
+      setFocus("globe");
+    } else if (objectId === "astronaut") {
+      setFocus("overview");
+    }
+  }
 
   return (
     <section
@@ -74,7 +104,12 @@ export function HeroSection({
         ) : (
           <CanvasErrorBoundary fallback={<FallbackBackdrop />}>
             <Suspense fallback={<FallbackBackdrop />}>
-              <LazyHeroScene focus={focus} reducedMotion={reducedMotion} />
+              <LazyHeroScene
+                focus={focus}
+                reducedMotion={reducedMotion}
+                theme={theme}
+                onObjectClick={handleObjectClick}
+              />
             </Suspense>
           </CanvasErrorBoundary>
         )}
@@ -109,57 +144,114 @@ export function HeroSection({
             &ldquo;{PROFILE.tagline}&rdquo;
           </p>
 
+          {/* Action Row */}
           <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                sounds.warp();
+                onOpenTerminal();
+              }}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition hover:brightness-110 active:scale-95"
+            >
+              <TerminalIcon className="h-4 w-4" />
+              Launch CLI Terminal
+            </button>
+
             <a
               href="#projects"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition hover:brightness-110"
+              onClick={() => sounds.click()}
+              className="glass-panel inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-cyan-400/50"
             >
               Explore 3D Projects
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4 text-cyan-300" />
             </a>
+
             <a
               href={PROFILE.githubUrl}
               target="_blank"
               rel="noreferrer"
-              className="glass-panel inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-cyan-400/50"
+              onClick={() => sounds.click()}
+              className="glass-panel inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-300 transition hover:border-cyan-400/50 hover:text-white"
             >
               <Github className="h-4 w-4 text-cyan-300" />
-              GitHub Profile
+              GitHub
             </a>
+          </div>
+
+          {/* Interactive 3D Hint Badge */}
+          <div className="mt-4 inline-flex items-center gap-2 text-xs text-cyan-300/80 font-mono">
+            <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+            <span>Interactive 3D Workspace: Click Monitor, Brain, or Cubes to explore</span>
           </div>
         </motion.div>
       </div>
 
-      {/* Bottom Camera Controls & Scroll Cue */}
-      <div className="relative z-10 mx-auto mb-6 flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6">
-        {!lowPower && (
-          <div className="glass-panel flex flex-wrap items-center gap-1.5 rounded-2xl p-1.5">
-            <span className="px-2 font-mono text-[11px] text-slate-400">
-              CAMERA:
-            </span>
-            {FOCUS_OPTIONS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setFocus(id)}
-                className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition ${
-                  focus === id
-                    ? "bg-cyan-500/25 text-cyan-200 ring-1 ring-cyan-400/50"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* Bottom Camera & Theme Controls */}
+      <div className="relative z-10 mx-auto mb-6 flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-4 lg:flex-row sm:px-6">
+        <div className="flex flex-wrap items-center gap-2">
+          {!lowPower && (
+            <div className="glass-panel flex flex-wrap items-center gap-1.5 rounded-2xl p-1.5">
+              <span className="px-2 font-mono text-[11px] text-slate-400">
+                CAMERA:
+              </span>
+              {FOCUS_OPTIONS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    sounds.click();
+                    setFocus(id);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition ${
+                    focus === id
+                      ? "bg-cyan-500/25 text-cyan-200 ring-1 ring-cyan-400/50"
+                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Theme Palette Switcher */}
+          {!lowPower && (
+            <div className="glass-panel flex items-center gap-1.5 rounded-2xl p-1.5">
+              <span className="flex items-center gap-1 px-2 font-mono text-[11px] text-slate-400">
+                <Palette className="h-3 w-3" />
+                THEME:
+              </span>
+              {THEME_OPTIONS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    sounds.success();
+                    onThemeChange(t.id);
+                  }}
+                  title={`Switch to ${t.label} 3D Lighting`}
+                  className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition ${
+                    theme === t.id
+                      ? "bg-white/15 text-white ring-1 ring-cyan-400/60"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${t.color}`} />
+                  <span className="hidden sm:inline">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <a
           href="#about"
+          onClick={() => sounds.click()}
           className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-950/70 px-4 py-2 text-xs text-slate-300 backdrop-blur-md transition hover:border-cyan-400/50 hover:text-cyan-200"
         >
-          <span>Scroll to Workspace</span>
+          <span>Scroll to Specs</span>
           <ArrowDown className="h-3.5 w-3.5 animate-bounce text-cyan-400" />
         </a>
       </div>

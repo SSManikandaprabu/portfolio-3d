@@ -4,6 +4,7 @@ import { ArrowUpRight, Github, Lock, X } from "lucide-react";
 import { ProjectItem, PROJECTS } from "../../data/profile";
 import { SectionHeading } from "./SectionHeading";
 import { TiltCard } from "./TiltCard";
+import { sounds } from "../../utils/sound";
 
 const FILTERS = ["All", "Systems", "Blockchain", "Full-Stack", "AI/ML"] as const;
 
@@ -29,10 +30,13 @@ export function ProjectsSection() {
           <button
             key={cat}
             type="button"
-            onClick={() => setFilter(cat)}
+            onClick={() => {
+              sounds.click();
+              setFilter(cat);
+            }}
             className={`rounded-xl px-4 py-2 font-mono text-xs font-medium transition ${
               filter === cat
-                ? "bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-white ring-1 ring-cyan-400/60"
+                ? "bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-white ring-1 ring-cyan-400/60 shadow-lg shadow-cyan-500/20"
                 : "glass-panel text-slate-300 hover:text-cyan-200"
             }`}
           >
@@ -121,10 +125,13 @@ export function ProjectsSection() {
 
                 <button
                   type="button"
-                  onClick={() => setActive(project)}
-                  className="font-mono text-[11px] text-slate-400 underline-offset-4 hover:text-cyan-300 hover:underline"
+                  onClick={() => {
+                    sounds.warp();
+                    setActive(project);
+                  }}
+                  className="font-mono text-[11px] text-cyan-300 underline-offset-4 hover:text-white hover:underline transition"
                 >
-                  Specs
+                  Specs ↗
                 </button>
               </div>
             </TiltCard>

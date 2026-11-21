@@ -4,6 +4,7 @@ import { Layers } from "lucide-react";
 import { SKILL_GROUPS } from "../../data/profile";
 import { SectionHeading } from "./SectionHeading";
 import { TiltCard } from "./TiltCard";
+import { sounds } from "../../utils/sound";
 
 export function SkillsSection() {
   const [selected, setSelected] = useState<string>("All");
@@ -27,10 +28,13 @@ export function SkillsSection() {
           <button
             key={cat}
             type="button"
-            onClick={() => setSelected(cat)}
+            onClick={() => {
+              sounds.click();
+              setSelected(cat);
+            }}
             className={`rounded-xl px-4 py-2 font-mono text-xs font-medium transition ${
               selected === cat
-                ? "bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-white ring-1 ring-cyan-400/60"
+                ? "bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-white ring-1 ring-cyan-400/60 shadow-lg shadow-cyan-500/20"
                 : "glass-panel text-slate-300 hover:text-cyan-200"
             }`}
           >
